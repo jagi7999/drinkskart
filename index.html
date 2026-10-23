@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DrinksCart Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,600&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101A16;
+    --bg-elevated:#0D1512;
+    --surface:#1B2921;
+    --surface-2:#22332A;
+    --surface-hover:#263A2F;
+    --border: rgba(196,182,150,0.14);
+    --border-strong: rgba(196,182,150,0.26);
+    --text:#EDE6D6;
+    --text-dim:#B7C2B4;
+    --muted:#7E8C80;
+    --amber:#D6A05F;
+    --amber-deep:#B5652F;
+    --sage:#8FB08F;
+    --danger:#D06A4E;
+    --danger-soft: rgba(208,106,78,0.14);
+    --danger-strong: #C4573D;
+    --success:#7CAE7C;
+    --success-soft: rgba(124,174,124,0.14);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 12px 32px rgba(0,0,0,0.4);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,0.5);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(214,160,95,0.07), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(143,176,143,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--amber); color:#101A16;}
+  .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric: tabular-nums;}
+  .display{font-family:'Fraunces',serif;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:8px;}
+
+  /* ---------- Login ---------- */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card{
+    width:100%; max-width:400px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:40px 32px; box-shadow:var(--shadow-lg);
+    position:relative; overflow:hidden;
+  }
+  .login-card::before{
+    content:""; position:absolute; top:-60px; right:-60px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle, rgba(214,160,95,0.18), transparent 70%);
+  }
+  .brand-mark{
+    display:flex; align-items:center; gap:12px; margin-bottom:6px;
+  }
+  .bottle-icon{
+    width:36px; height:36px; flex-shrink:0;
+  }
+  .brand-name{font-family:'Fraunces',serif; font-weight:700; font-size:24px; letter-spacing:-0.01em;}
+  .brand-tag{color:var(--muted); font-size:13px; margin:0 0 28px 0; padding-left:48px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text);
+    padding:11px 13px; border-radius:var(--radius-sm); font-size:14px; font-family:inherit;
+    transition: border-color .15s, background .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none; border-color:var(--amber); background:var(--surface-2);
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 18px; border-radius:var(--radius-sm); border:1px solid transparent;
+    font-size:14px; font-weight:600; cursor:pointer; transition: transform .12s, filter .12s, background .15s;
+    white-space:nowrap;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:linear-gradient(180deg, var(--amber), var(--amber-deep)); color:#1A1206;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{background:transparent; border-color:var(--border-strong); color:var(--text);}
+  .btn-ghost:hover{background:var(--surface-hover);}
+  .btn-danger{background:var(--danger-soft); color:var(--danger); border-color:rgba(208,106,78,0.3);}
+  .btn-danger:hover{background:rgba(208,106,78,0.22);}
+  .btn-full{width:100%;}
+  .btn-sm{padding:7px 12px; font-size:13px;}
+  .login-error{color:var(--danger); font-size:13px; margin-top:10px; min-height:16px;}
+
+  /* ---------- App shell ---------- */
+  #app{display:none; min-height:100vh;}
+  .shell{display:grid; grid-template-columns:230px 1fr; min-height:100vh;}
+  .sidebar{
+    background:var(--bg-elevated); border-right:1px solid var(--border);
+    padding:24px 16px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .sidebar .brand-mark{padding:0 8px; margin-bottom:2px;}
+  .sidebar .brand-tag{padding-left:48px; margin-bottom:32px;}
+  .nav-item{
+    display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:var(--radius-sm);
+    color:var(--text-dim); cursor:pointer; font-size:14px; font-weight:500; margin-bottom:2px;
+    transition: background .15s, color .15s;
+  }
+  .nav-item svg{width:17px; height:17px; flex-shrink:0; opacity:.85;}
+  .nav-item:hover{background:var(--surface); color:var(--text);}
+  .nav-item.active{background:var(--surface-2); color:var(--amber); }
+  .nav-item.active svg{opacity:1;}
+  .sidebar-footer{margin-top:auto; padding-top:16px; border-top:1px solid var(--border);}
+  .sidebar-footer .muted-line{font-size:11.5px; color:var(--muted); padding:0 12px 10px;}
+
+  .main{padding:32px 40px; max-width:1180px;}
+  .page-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:14px;}
+  .page-title{font-family:'Fraunces',serif; font-size:28px; font-weight:700; margin:0 0 4px 0;}
+  .page-sub{color:var(--muted); font-size:13.5px; margin:0;}
+
+  /* ---------- Stat cards ---------- */
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px;}
+  .stat-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; position:relative; overflow:hidden;
+  }
+  .stat-label{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:10px;}
+  .stat-value{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:600; letter-spacing:-0.01em;}
+  .stat-value.amber{color:var(--amber);}
+  .stat-value.danger{color:var(--danger);}
+  .stat-value.success{color:var(--success);}
+  .stat-note{font-size:12px; color:var(--muted); margin-top:6px;}
+
+  /* ---------- Ledger stamp (signature element) ---------- */
+  .stamp{
+    display:inline-flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-weight:700; font-size:10.5px; letter-spacing:.08em;
+    text-transform:uppercase; padding:4px 11px; border-radius:20px; border:1.5px solid currentColor;
+    transform: rotate(-3deg);
+    position:relative;
+  }
+  .stamp.paid{color:var(--success); background:var(--success-soft);}
+  .stamp.due{color:var(--danger); background:var(--danger-soft);}
+  .stamp.partial{color:var(--amber); background:rgba(214,160,95,0.14);}
+
+  /* ---------- Cards / tables ---------- */
+  .panel{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:24px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border); gap:12px; flex-wrap:wrap;}
+  .panel-head h3{font-family:'Fraunces',serif; font-size:17px; margin:0; font-weight:600;}
+  .search-input{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text);
+    padding:9px 13px; border-radius:var(--radius-sm); font-size:13.5px; width:240px;
+  }
+  .search-input:focus{outline:none; border-color:var(--amber);}
+
+  table{width:100%; border-collapse:collapse;}
+  th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+    padding:12px 20px; border-bottom:1px solid var(--border); font-weight:600;
+  }
+  td{padding:14px 20px; border-bottom:1px solid var(--border); font-size:14px;}
+  tbody tr{cursor:pointer; transition:background .12s;}
+  tbody tr:hover{background:var(--surface-hover);}
+  tbody tr:last-child td{border-bottom:none;}
+  .cell-name{font-weight:600;}
+  .cell-sub{color:var(--muted); font-size:12.5px; margin-top:2px;}
+  .empty-state{padding:48px 24px; text-align:center; color:var(--muted);}
+  .empty-state .display{font-size:16px; color:var(--text-dim); margin-bottom:4px;}
+
+  /* ---------- Customer card grid (ledger book feel) ---------- */
+  .customer-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px;}
+  .customer-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px; cursor:pointer; transition: border-color .15s, transform .12s;
+    position:relative;
+  }
+  .customer-card:hover{border-color:var(--border-strong); transform:translateY(-2px);}
+  .customer-card .top-row{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;}
+  .customer-card .cname{font-family:'Fraunces',serif; font-weight:600; font-size:16.5px;}
+  .customer-card .cphone{color:var(--muted); font-size:12.5px; margin-top:3px;}
+  .customer-card .balance-row{display:flex; justify-content:space-between; align-items:baseline; padding-top:12px; border-top:1px dashed var(--border-strong);}
+  .balance-figure{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:17px;}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(6,10,8,0.6); backdrop-filter:blur(3px);
+    align-items:flex-start; justify-content:center; z-index:100; padding:60px 20px; overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius);
+    width:100%; max-width:480px; padding:28px; box-shadow:var(--shadow-lg);
+  }
+  .modal.wide{max-width:640px;}
+  .modal-title{font-family:'Fraunces',serif; font-size:19px; font-weight:700; margin:0 0 20px 0;}
+  .modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:22px;}
+  .modal-close{position:absolute;}
+
+  /* ---------- Line items (order builder) ---------- */
+  .line-item-row{display:grid; grid-template-columns:2fr 90px 110px 32px; gap:10px; align-items:center; margin-bottom:10px;}
+  .line-item-row select, .line-item-row input{margin:0;}
+  .remove-line{background:var(--danger-soft); color:var(--danger); border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:15px;}
+  .add-line-btn{margin-top:4px;}
+  .order-total-row{
+    display:flex; justify-content:space-between; align-items:center; padding-top:16px; margin-top:12px;
+    border-top:1px dashed var(--border-strong);
+  }
+  .order-total-figure{font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:700; color:var(--amber);}
+
+  /* ---------- Ledger detail (customer page) ---------- */
+  .ledger-head{display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:24px;}
+  .ledger-back{display:inline-flex; align-items:center; gap:6px; color:var(--muted); cursor:pointer; font-size:13px; margin-bottom:14px;}
+  .ledger-back:hover{color:var(--text);}
+  .ledger-balance-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:22px 26px;
+    display:flex; gap:36px; flex-wrap:wrap;
+  }
+  .lb-item .stat-label{margin-bottom:8px;}
+  .lb-item .stat-value{font-size:22px;}
+
+  .timeline{list-style:none; margin:0; padding:0;}
+  .timeline-entry{
+    display:flex; gap:16px; padding:16px 20px; border-bottom:1px solid var(--border); position:relative;
+  }
+  .timeline-entry:last-child{border-bottom:none;}
+  .te-icon{
+    width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-size:15px; margin-top:2px;
+  }
+  .te-icon.order{background:rgba(214,160,95,0.15); color:var(--amber);}
+  .te-icon.payment{background:var(--success-soft); color:var(--success);}
+  .te-body{flex:1;}
+  .te-title{font-weight:600; font-size:14.5px; display:flex; justify-content:space-between; gap:12px;}
+  .te-amount{font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .te-amount.order{color:var(--amber);}
+  .te-amount.payment{color:var(--success);}
+  .te-meta{color:var(--muted); font-size:12.5px; margin-top:3px;}
+  .te-items{margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;}
+  .te-item-chip{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:4px 10px;
+    font-size:12px; color:var(--text-dim);
+  }
+  .te-actions{display:inline-flex; gap:6px; align-items:center;}
+  .te-action-btn{
+    background:transparent; border:1px solid var(--border-strong); color:var(--muted);
+    width:26px; height:26px; border-radius:7px; cursor:pointer; font-size:12px;
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    transition: background .12s, color .12s;
+  }
+  .te-action-btn:hover{background:var(--surface-hover); color:var(--text);}
+  .te-action-btn.danger:hover{background:var(--danger-soft); color:var(--danger); border-color:rgba(208,106,78,0.4);}
+
+  /* ---------- Brand grid ---------- */
+  .brand-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px;}
+  .brand-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px;}
+  .brand-card .bname{font-family:'Fraunces',serif; font-weight:600; font-size:16px;}
+  .brand-card .bsize{display:inline-block; margin-top:4px; font-size:11.5px; color:var(--muted); background:var(--surface-2); padding:3px 8px; border-radius:20px;}
+  .brand-card .bprice{font-family:'IBM Plex Mono',monospace; font-size:21px; font-weight:600; color:var(--amber); margin-top:14px;}
+  .brand-card .bactions{display:flex; gap:8px; margin-top:14px;}
+
+  .toast{
+    position:fixed; bottom:24px; right:24px; background:var(--surface-2); border:1px solid var(--border-strong);
+    color:var(--text); padding:13px 18px; border-radius:var(--radius-sm); box-shadow:var(--shadow-lg);
+    font-size:13.5px; z-index:200; display:flex; align-items:center; gap:10px; opacity:0; transform:translateY(10px);
+    transition:opacity .2s, transform .2s;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .toast.success{border-color:rgba(124,174,124,0.4);}
+  .toast.error{border-color:rgba(208,106,78,0.4);}
+  .toast-dot{width:8px;height:8px;border-radius:50%;}
+  .toast.success .toast-dot{background:var(--success);}
+  .toast.error .toast-dot{background:var(--danger);}
+
+  .row{display:flex; gap:10px; align-items:center;}
+  .grow{flex:1;}
+  .badge{font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface-2); color:var(--muted);}
+  .loader{display:flex; align-items:center; justify-content:center; padding:60px; color:var(--muted); font-size:13.5px;}
+  .field-hint{font-size:11.5px; color:var(--muted); margin-top:5px;}
+
+  @media (max-width: 860px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:relative; height:auto; flex-direction:row; overflow-x:auto; padding:14px;}
+    .sidebar .brand-mark, .sidebar .brand-tag, .sidebar-footer{display:none;}
+    .nav-item{flex-direction:column; font-size:11px; gap:4px; text-align:center; white-space:nowrap;}
+    .main{padding:20px;}
+    .stat-grid{grid-template-columns:1fr 1fr;}
+    .line-item-row{grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand-mark">
+      <svg class="bottle-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 2H15V5.5L17 8V21C17 21.55 16.55 22 16 22H8C7.45 22 7 21.55 7 21V8L9 5.5V2Z" stroke="#D6A05F" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M9 2H15" stroke="#D6A05F" stroke-width="1.4"/>
+        <path d="M7 12H17" stroke="#D6A05F" stroke-width="1" stroke-dasharray="1.5 2"/>
+      </svg>
+      <div class="brand-name">DrinksCart</div>
+    </div>
+    <p class="brand-tag">Ledger &amp; Accounts</p>
+    <div class="field">
+      <label>Admin Password</label>
+      <input type="password" id="loginPassword" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="field-hint" style="margin-top:18px;">First time here? Default password is <span class="mono">admin123</span> — change it from Settings after signing in.</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="brand-mark">
+        <svg class="bottle-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 2H15V5.5L17 8V21C17 21.55 16.55 22 16 22H8C7.45 22 7 21.55 7 21V8L9 5.5V2Z" stroke="#D6A05F" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M9 2H15" stroke="#D6A05F" stroke-width="1.4"/>
+          <path d="M7 12H17" stroke="#D6A05F" stroke-width="1" stroke-dasharray="1.5 2"/>
+        </svg>
+        <div class="brand-name" style="font-size:19px;">DrinksCart</div>
+      </div>
+      <p class="brand-tag" style="margin-bottom:22px;">Ledger &amp; Accounts</p>
+
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="customers" onclick="navigate('customers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6.4 6.5-6.4s6.5 2.8 6.5 6.4"/><circle cx="17.5" cy="8.5" r="2.5"/><path d="M15 13.6c2.9.2 5 2.7 5 6.4"/></svg>
+        Customers
+      </div>
+      <div class="nav-item" data-page="brands" onclick="navigate('brands')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 2H15V5.5L17 8V21C17 21.55 16.55 22 16 22H8C7.45 22 7 21.55 7 21V8L9 5.5V2Z"/></svg>
+        Brands &amp; Prices
+      </div>
+      <div class="nav-item" data-page="neworder" onclick="navigate('neworder')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>
+        New Order
+      </div>
+      <div class="nav-item" data-page="payments" onclick="navigate('payments')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19"/></svg>
+        Payments
+      </div>
+      <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 000-2l2-1.5-2-3.4-2.3.9a8 8 0 00-1.7-1L15 3h-6l-.4 2a8 8 0 00-1.7 1l-2.3-.9-2 3.4L4.6 11a7.9 7.9 0 000 2l-2 1.5 2 3.4 2.3-.9a8 8 0 001.7 1L9 21h6l.4-2a8 8 0 001.7-1l2.3.9 2-3.4L19.4 13z"/></svg>
+        Settings
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="muted-line">Signed in as Admin</div>
+        <div class="nav-item" onclick="doLogout()" style="margin-bottom:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          Sign out
+        </div>
+      </div>
+    </div>
+
+    <div class="main" id="mainContent">
+      <!-- pages rendered here -->
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-dot"></span><span id="toastMsg"></span></div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="customerModal">
+  <div class="modal">
+    <h3 class="modal-title" id="customerModalTitle">Add Customer</h3>
+    <input type="hidden" id="customerId">
+    <div class="field"><label>Name</label><input type="text" id="custName" placeholder="Customer name"></div>
+    <div class="field"><label>Phone</label><input type="text" id="custPhone" placeholder="10-digit phone number"></div>
+    <div class="field"><label>Address / Notes</label><textarea id="custAddress" rows="2" placeholder="Optional"></textarea></div>
+    <div class="field">
+      <label>Opening Balance (₹)</label>
+      <input type="number" id="custOpeningBalance" placeholder="0.00" step="0.01">
+      <div class="field-hint">Any existing dues this customer already owed before you started using this ledger. Leave as 0 for a customer with no carried-over balance.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('customerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="brandModal">
+  <div class="modal">
+    <h3 class="modal-title" id="brandModalTitle">Add Brand</h3>
+    <input type="hidden" id="brandId">
+    <div class="field"><label>Brand Name</label><input type="text" id="brandName" placeholder="e.g. Royal Stag"></div>
+    <div class="field"><label>Size</label>
+      <select id="brandSize">
+        <option value="750ml">750 ml</option>
+        <option value="1L">1 Litre</option>
+        <option value="180ml">180 ml</option>
+        <option value="330ml">330 ml (bottle/can)</option>
+        <option value="650ml">650 ml</option>
+      </select>
+    </div>
+    <div class="field"><label>Price (₹)</label><input type="number" id="brandPrice" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('brandModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBrand()">Save Brand</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderModal">
+  <div class="modal wide">
+    <h3 class="modal-title" id="orderModalTitle">New Order</h3>
+    <input type="hidden" id="orderEditId">
+    <div class="field">
+      <label>Customer</label>
+      <select id="orderCustomer"></select>
+    </div>
+    <div class="field">
+      <label>Order Date</label>
+      <input type="date" id="orderDate">
+    </div>
+    <label style="display:block; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:8px;">Items</label>
+    <div id="lineItemsContainer"></div>
+    <button class="btn btn-ghost btn-sm add-line-btn" onclick="addLineItem()">+ Add another item</button>
+    <div class="field" style="margin-top:16px;"><label>Notes</label><input type="text" id="orderNotes" placeholder="Optional"></div>
+    <div class="order-total-row">
+      <span style="color:var(--muted); font-size:13px;">Order total</span>
+      <span class="order-total-figure" id="orderTotalFigure">₹0.00</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('orderModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOrder()">Save Order</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <h3 class="modal-title" id="paymentModalTitle">Record Payment</h3>
+    <input type="hidden" id="paymentEditId">
+    <div class="field">
+      <label>Customer</label>
+      <select id="paymentCustomer" onchange="updatePaymentDueHint()"></select>
+    </div>
+    <div class="field-hint" id="paymentDueHint" style="margin-bottom:14px;"></div>
+    <div class="field"><label>Amount (₹)</label><input type="number" id="paymentAmount" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="field"><label>Date</label><input type="date" id="paymentDate"></div>
+    <div class="field"><label>Notes</label><input type="text" id="paymentNotes" placeholder="Optional — e.g. Cash, UPI, GPay"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('paymentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePayment()">Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal">
+    <h3 class="modal-title">Change Admin Password</h3>
+    <div class="field"><label>Current Password</label><input type="password" id="currentPassword"></div>
+    <div class="field"><label>New Password</label><input type="password" id="newPassword"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('passwordModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== CONFIG ==================== */
+const TURSO_URL = "https://drinkscart-jagsaam7.aws-ap-south-1.turso.io";
+const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODcyOTE5NDcsImlkIjoiMDFhMDIyZGQtZDIwMS03NjNhLWE5MGQtNjUyNjljNDViNDk0Iiwia2lkIjoiTVgwNUM3d2czMllVdVJTblR2dHBtczlrRXRhbXlVRWpZTzZYRl9UMFRSSSIsInJpZCI6IjlhOWUzNzZmLWI4MDgtNGI4Mi1iYjhmLTViMmU1OTkwMWZmOSJ9.NE1C3PwgtR1zZuuj34PjnZSeklIIW-y-Ye6rzf0NBRYZ8qr-YEG4tkn_WNqQQuZwbT7FzfjKoLWCP0hxclQNAA";
+
+/* ==================== TURSO HELPERS ==================== */
+function toTursoArg(v){
+  if (v === null || v === undefined) return {type:"null"};
+  if (typeof v === "number") return Number.isInteger(v) ? {type:"integer", value:String(v)} : {type:"float", value:v};
+  if (typeof v === "boolean") return {type:"integer", value: v ? "1" : "0"};
+  return {type:"text", value:String(v)};
+}
+
+function fromTursoRow(row, cols){
+  const obj = {};
+  cols.forEach((c,i)=>{
+    const cell = row[i];
+    if (!cell || cell.type === "null") obj[c.name] = null;
+    else if (cell.type === "integer") obj[c.name] = parseInt(cell.value,10);
+    else if (cell.type === "float") obj[c.name] = parseFloat(cell.value);
+    else obj[c.name] = cell.value;
+  });
+  return obj;
+}
+
+async function tursoBatch(statements){
+  // statements: [{sql, args}]
+  const requests = statements.map(s => ({
+    type:"execute",
+    stmt:{ sql: s.sql, args: (s.args||[]).map(toTursoArg) }
+  }));
+  requests.push({type:"close"});
+  const res = await fetch(`${TURSO_URL}/v2/pipeline`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${TURSO_TOKEN}`},
+    body: JSON.stringify({requests})
+  });
+  if (!res.ok){
+    const t = await res.text();
+    throw new Error("Turso error: " + t);
+  }
+  const data = await res.json();
+  const results = [];
+  for (const r of data.results){
+    if (r.type === "error") throw new Error(r.error.message || "Turso query error");
+    if (r.type === "ok" && r.response && r.response.result){
+      const result = r.response.result;
+      const cols = result.cols || [];
+      const rows = (result.rows || []).map(row => fromTursoRow(row, cols));
+      results.push({rows, rowsAffected: result.affected_row_count || 0, lastInsertRowid: result.last_insert_rowid});
+    } else {
+      results.push({rows:[], rowsAffected:0});
+    }
+  }
+  return results;
+}
+
+async function tursoRun(sql, args){
+  const r = await tursoBatch([{sql, args}]);
+  return r[0];
+}
+
+/* ==================== SCHEMA ==================== */
+async function initSchema(){
+  const stmts = [
+    {sql:`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`},
+    {sql:`CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT,
+      address TEXT,
+      created_at TEXT
+    )`},
+    {sql:`CREATE TABLE IF NOT EXISTS brands (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      size TEXT,
+      price REAL NOT NULL DEFAULT 0,
+      active INTEGER DEFAULT 1,
+      created_at TEXT
+    )`},
+    {sql:`CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      order_date TEXT,
+      notes TEXT,
+      total REAL NOT NULL DEFAULT 0,
+      created_at TEXT
+    )`},
+    {sql:`CREATE TABLE IF NOT EXISTS order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL,
+      brand_id INTEGER,
+      brand_name TEXT,
+      size TEXT,
+      quantity INTEGER NOT NULL,
+      unit_price REAL NOT NULL,
+      total REAL NOT NULL
+    )`},
+    {sql:`CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      payment_date TEXT,
+      notes TEXT,
+      created_at TEXT
+    )`}
+  ];
+  await tursoBatch(stmts);
+
+  // migration: opening_balance column for existing dues carried into the ledger
+  try{
+    await tursoRun(`ALTER TABLE customers ADD COLUMN opening_balance REAL NOT NULL DEFAULT 0`);
+  } catch(e){ /* column already exists — safe to ignore */ }
+
+  // seed default admin password if not present
+  const existing = await tursoRun(`SELECT value FROM settings WHERE key='admin_password'`);
+  if (existing.rows.length === 0){
+    await tursoRun(`INSERT INTO settings (key, value) VALUES ('admin_password','admin123')`);
+  }
+}
+
+/* ==================== STATE ==================== */
+let STATE = {
+  customers: [],
+  brands: [],
+  orders: [],
+  orderItems: [],
+  payments: [],
+  currentPage: "dashboard",
+  currentCustomerId: null
+};
+
+/* ==================== UTIL ==================== */
+function money(n){
+  const v = Number(n||0);
+  return "₹" + v.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){
+  if (!d) return "—";
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+}
+function showToast(msg, type="success"){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = "toast show " + type;
+  setTimeout(()=> t.classList.remove('show'), 2600);
+}
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ==================== AUTH ==================== */
+let schemaReady = false;
+async function ensureSchema(){
+  if (schemaReady) return;
+  await initSchema();
+  schemaReady = true;
+}
+
+async function doLogin(){
+  const pw = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  err.textContent = "";
+  if (!pw){ err.textContent = "Enter your password."; return; }
+  if (btn){ btn.disabled = true; btn.textContent = "Signing in…"; }
+  try{
+    await ensureSchema(); // creates tables + seeds default password on a fresh database
+    const res = await tursoRun(`SELECT value FROM settings WHERE key='admin_password'`);
+    const stored = res.rows.length ? res.rows[0].value : "admin123";
+    if (pw === stored){
+      sessionStorage.setItem('dc_auth', '1');
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      boot();
+    } else {
+      err.textContent = "Incorrect password.";
+    }
+  } catch(e){
+    err.textContent = "Could not reach the database: " + (e.message || "check your Turso URL/token and network connection.");
+    console.error(e);
+  } finally {
+    if (btn){ btn.disabled = false; btn.textContent = "Sign in"; }
+  }
+}
+function doLogout(){
+  sessionStorage.removeItem('dc_auth');
+  location.reload();
+}
+
+/* ==================== DATA LOAD ==================== */
+async function loadAll(){
+  const [c, b, o, oi, p] = await tursoBatch([
+    {sql:`SELECT * FROM customers ORDER BY name COLLATE NOCASE ASC`},
+    {sql:`SELECT * FROM brands ORDER BY active DESC, name COLLATE NOCASE ASC`},
+    {sql:`SELECT * FROM orders ORDER BY order_date DESC, id DESC`},
+    {sql:`SELECT * FROM order_items`},
+    {sql:`SELECT * FROM payments ORDER BY payment_date DESC, id DESC`}
+  ]);
+  STATE.customers = c.rows;
+  STATE.brands = b.rows;
+  STATE.orders = o.rows;
+  STATE.orderItems = oi.rows;
+  STATE.payments = p.rows;
+}
+
+function customerOrdered(customerId){
+  return STATE.orders.filter(o=>o.customer_id===customerId).reduce((s,o)=>s+Number(o.total||0),0);
+}
+function customerPaid(customerId){
+  return STATE.payments.filter(p=>p.customer_id===customerId).reduce((s,p)=>s+Number(p.amount||0),0);
+}
+function customerOpening(customerId){
+  const c = STATE.customers.find(x=>x.id===customerId);
+  return c ? Number(c.opening_balance||0) : 0;
+}
+function customerBalance(customerId){
+  return customerOpening(customerId) + customerOrdered(customerId) - customerPaid(customerId);
+}
+
+/* ==================== NAV / RENDER ==================== */
+function navigate(page){
+  STATE.currentPage = page;
+  STATE.currentCustomerId = null;
+  document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
+    el.classList.toggle('active', el.dataset.page===page);
+  });
+  render();
+}
+
+function render(){
+  const main = document.getElementById('mainContent');
+  switch(STATE.currentPage){
+    case 'dashboard': main.innerHTML = renderDashboard(); break;
+    case 'customers': main.innerHTML = renderCustomers(); break;
+    case 'customerDetail': main.innerHTML = renderCustomerDetail(); break;
+    case 'brands': main.innerHTML = renderBrands(); break;
+    case 'neworder': openOrderModal(); main.innerHTML = renderGenericRedirect('Orders', 'Use the form to log a new order.'); navigate.__skip = true; break;
+    case 'payments': main.innerHTML = renderPayments(); break;
+    case 'settings': main.innerHTML = renderSettings(); break;
+    default: main.innerHTML = renderDashboard();
+  }
+}
+
+function renderGenericRedirect(title, sub){
+  return `<div class="page-head"><div><h1 class="page-title">${title}</h1><p class="page-sub">${sub}</p></div></div>`;
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const totalOrdered = STATE.orders.reduce((s,o)=>s+Number(o.total||0),0);
+  const totalPaid = STATE.payments.reduce((s,p)=>s+Number(p.amount||0),0);
+  const totalOpening = STATE.customers.reduce((s,c)=>s+Number(c.opening_balance||0),0);
+  const totalDue = totalOpening + totalOrdered - totalPaid;
+  const activeCustomers = STATE.customers.length;
+
+  const debtors = STATE.customers
+    .map(c => ({...c, balance: customerBalance(c.id)}))
+    .filter(c => c.balance > 0.004)
+    .sort((a,b)=>b.balance-a.balance)
+    .slice(0,8);
+
+  const now = new Date();
+  const thisMonth = now.toISOString().slice(0,7);
+  const collectedThisMonth = STATE.payments
+    .filter(p => (p.payment_date||"").slice(0,7) === thisMonth)
+    .reduce((s,p)=>s+Number(p.amount||0),0);
+
+  const recent = [
+    ...STATE.orders.slice(0,5).map(o => ({...o, kind:'order', date:o.order_date, custId:o.customer_id})),
+    ...STATE.payments.slice(0,5).map(p => ({...p, kind:'payment', date:p.payment_date, custId:p.customer_id}))
+  ].sort((a,b)=> new Date(b.date||0) - new Date(a.date||0)).slice(0,8);
+
+  return `
+  <div class="page-head">
+    <div><h1 class="page-title">Dashboard</h1><p class="page-sub">Overview of the drinks ledger</p></div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="openOrderModal()">+ New Order</button>
+      <button class="btn btn-ghost" onclick="openPaymentModal()">+ Record Payment</button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Outstanding</div>
+      <div class="stat-value ${totalDue>0?'danger':'success'} mono">${money(totalDue)}</div>
+      <div class="stat-note">Across ${activeCustomers} customers${totalOpening>0.004?' · incl. '+money(totalOpening)+' old dues':''}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Collected</div>
+      <div class="stat-value success mono">${money(totalPaid)}</div>
+      <div class="stat-note">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Collected This Month</div>
+      <div class="stat-value amber mono">${money(collectedThisMonth)}</div>
+      <div class="stat-note">${now.toLocaleDateString('en-IN',{month:'long', year:'numeric'})}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Billed</div>
+      <div class="stat-value mono">${money(totalOrdered)}</div>
+      <div class="stat-note">${STATE.orders.length} orders logged</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Top Dues</h3><span class="badge">${debtors.length} customers owe money</span></div>
+    ${debtors.length===0 ? `<div class="empty-state"><div class="display">All settled up</div>No outstanding dues right now.</div>` : `
+    <table>
+      <thead><tr><th>Customer</th><th>Phone</th><th style="text-align:right;">Balance Due</th></tr></thead>
+      <tbody>
+        ${debtors.map(c=>`
+          <tr onclick="openCustomerDetail(${c.id})">
+            <td class="cell-name">${esc(c.name)}</td>
+            <td class="mono" style="color:var(--muted);">${esc(c.phone||'—')}</td>
+            <td style="text-align:right;"><span class="balance-figure mono" style="color:var(--danger);">${money(c.balance)}</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Recent Activity</h3></div>
+    ${recent.length===0 ? `<div class="empty-state">No activity yet. Log your first order to get started.</div>` : `
+    <ul class="timeline">
+      ${recent.map(r=>{
+        const c = STATE.customers.find(x=>x.id===r.custId);
+        const name = c ? esc(c.name) : 'Unknown customer';
+        if (r.kind==='order'){
+          return `<li class="timeline-entry" onclick="openCustomerDetail(${r.custId})" style="cursor:pointer;">
+            <div class="te-icon order">🍾</div>
+            <div class="te-body">
+              <div class="te-title"><span>${name} placed an order</span><span class="te-amount order mono">${money(r.total)}</span></div>
+              <div class="te-meta">${fmtDate(r.date)}</div>
+            </div>
+          </li>`;
+        }
+        return `<li class="timeline-entry" onclick="openCustomerDetail(${r.custId})" style="cursor:pointer;">
+          <div class="te-icon payment">₹</div>
+          <div class="te-body">
+            <div class="te-title"><span>${name} made a payment</span><span class="te-amount payment mono">${money(r.amount)}</span></div>
+            <div class="te-meta">${fmtDate(r.date)}${r.notes?' · '+esc(r.notes):''}</div>
+          </div>
+        </li>`;
+      }).join('')}
+    </ul>`}
+  </div>
+  `;
+}
+
+/* ---------- Customers list ---------- */
+function renderCustomers(){
+  const q = (STATE._custSearch||"").toLowerCase();
+  const list = STATE.customers
+    .map(c => ({...c, balance: customerBalance(c.id)}))
+    .filter(c => !q || c.name.toLowerCase().includes(q) || (c.phone||'').includes(q));
+
+  return `
+  <div class="page-head">
+    <div><h1 class="page-title">Customers</h1><p class="page-sub">${STATE.customers.length} customers on the ledger</p></div>
+    <div class="row">
+      <input class="search-input" placeholder="Search name or phone…" value="${esc(STATE._custSearch||'')}" oninput="STATE._custSearch=this.value; render();">
+      <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Customer</button>
+    </div>
+  </div>
+  ${list.length===0 ? `<div class="panel"><div class="empty-state"><div class="display">No customers yet</div>Add your first customer to start the ledger.</div></div>` : `
+  <div class="customer-grid">
+    ${list.map(c=>`
+      <div class="customer-card" onclick="openCustomerDetail(${c.id})">
+        <div class="top-row">
+          <div>
+            <div class="cname">${esc(c.name)}</div>
+            <div class="cphone">${esc(c.phone||'No phone on file')}</div>
+          </div>
+          ${statusStamp(c.balance)}
+        </div>
+        <div class="balance-row">
+          <span style="color:var(--muted); font-size:12px;">Balance</span>
+          <span class="balance-figure" style="color:${c.balance>0.004?'var(--danger)':'var(--success)'};">${money(c.balance)}</span>
+        </div>
+      </div>
+    `).join('')}
+  </div>`}
+  `;
+}
+
+function statusStamp(balance){
+  if (balance > 0.004) return `<span class="stamp due">Due</span>`;
+  if (balance < -0.004) return `<span class="stamp partial">Credit</span>`;
+  return `<span class="stamp paid">Paid Up</span>`;
+}
+
+/* ---------- Customer detail / ledger ---------- */
+function openCustomerDetail(id){
+  STATE.currentPage = 'customerDetail';
+  STATE.currentCustomerId = id;
+  document.querySelectorAll('.nav-item[data-page]').forEach(el=>el.classList.remove('active'));
+  render();
+}
+
+function renderCustomerDetail(){
+  const c = STATE.customers.find(x=>x.id===STATE.currentCustomerId);
+  if (!c) return renderCustomers();
+  const opening = customerOpening(c.id);
+  const ordered = customerOrdered(c.id);
+  const paid = customerPaid(c.id);
+  const balance = opening + ordered - paid;
+
+  const orders = STATE.orders.filter(o=>o.customer_id===c.id).map(o=>({
+    ...o, kind:'order', date:o.order_date,
+    items: STATE.orderItems.filter(i=>i.order_id===o.id)
+  }));
+  const pays = STATE.payments.filter(p=>p.customer_id===c.id).map(p=>({...p, kind:'payment', date:p.payment_date}));
+  const timeline = [...orders, ...pays].sort((a,b)=> new Date(b.date||0)-new Date(a.date||0) || (b.id-a.id));
+  if (Math.abs(opening) > 0.004){
+    timeline.push({kind:'opening', date:c.created_at, amount:opening});
+  }
+
+  return `
+  <div class="ledger-back" onclick="navigate('customers')">&larr; Back to customers</div>
+  <div class="ledger-head">
+    <div>
+      <h1 class="page-title" style="margin-bottom:2px;">${esc(c.name)}</h1>
+      <p class="page-sub">${esc(c.phone||'No phone')}${c.address?' · '+esc(c.address):''}</p>
+    </div>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm" onclick="openCustomerModal(${c.id})">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${c.id})">Delete Customer</button>
+      <button class="btn btn-ghost" onclick="openOrderModal(${c.id})">+ New Order</button>
+      <button class="btn btn-primary" onclick="openPaymentModal(${c.id})">+ Record Payment</button>
+    </div>
+  </div>
+
+  <div class="ledger-balance-card" style="margin-bottom:24px;">
+    ${Math.abs(opening) > 0.004 ? `<div class="lb-item"><div class="stat-label">Opening Balance</div><div class="stat-value mono" style="color:var(--amber);">${money(opening)}</div></div>` : ''}
+    <div class="lb-item"><div class="stat-label">Total Billed</div><div class="stat-value mono">${money(ordered)}</div></div>
+    <div class="lb-item"><div class="stat-label">Total Paid</div><div class="stat-value success mono">${money(paid)}</div></div>
+    <div class="lb-item"><div class="stat-label">Balance Due</div><div class="stat-value mono" style="color:${balance>0.004?'var(--danger)':'var(--success)'};">${money(balance)}</div></div>
+    <div class="lb-item" style="align-self:center;">${statusStamp(balance)}</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Ledger History</h3><span class="badge">${timeline.length} entries</span></div>
+    ${timeline.length===0 ? `<div class="empty-state">No orders or payments recorded yet.</div>` : `
+    <ul class="timeline">
+      ${timeline.map(t=>{
+        if (t.kind==='order'){
+          return `<li class="timeline-entry">
+            <div class="te-icon order">🍾</div>
+            <div class="te-body">
+              <div class="te-title">
+                <span>Order</span>
+                <span class="te-actions">
+                  <span class="te-amount order mono">${money(t.total)}</span>
+                  <button class="te-action-btn" onclick="editOrder(${t.id})" title="Edit order">✎</button>
+                  <button class="te-action-btn danger" onclick="deleteOrder(${t.id})" title="Delete order">🗑</button>
+                </span>
+              </div>
+              <div class="te-meta">${fmtDate(t.date)}${t.notes?' · '+esc(t.notes):''}</div>
+              <div class="te-items">
+                ${t.items.map(i=>`<span class="te-item-chip">${esc(i.brand_name)} ${esc(i.size||'')} × ${i.quantity} @ ${money(i.unit_price)}</span>`).join('')}
+              </div>
+            </div>
+          </li>`;
+        }
+        if (t.kind==='payment'){
+          return `<li class="timeline-entry">
+            <div class="te-icon payment">₹</div>
+            <div class="te-body">
+              <div class="te-title">
+                <span>Payment received</span>
+                <span class="te-actions">
+                  <span class="te-amount payment mono">${money(t.amount)}</span>
+                  <button class="te-action-btn" onclick="editPayment(${t.id})" title="Edit payment">✎</button>
+                  <button class="te-action-btn danger" onclick="deletePayment(${t.id})" title="Delete payment">🗑</button>
+                </span>
+              </div>
+              <div class="te-meta">${fmtDate(t.date)}${t.notes?' · '+esc(t.notes):''}</div>
+            </div>
+          </li>`;
+        }
+        return `<li class="timeline-entry">
+          <div class="te-icon order">📜</div>
+          <div class="te-body">
+            <div class="te-title"><span>Opening balance (carried forward)</span><span class="te-amount order mono">${money(t.amount)}</span></div>
+            <div class="te-meta">${fmtDate(t.date)} · Existing dues before this ledger</div>
+          </div>
+        </li>`;
+      }).join('')}
+    </ul>`}
+  </div>
+  `;
+}
+
+/* ---------- Brands ---------- */
+function renderBrands(){
+  return `
+  <div class="page-head">
+    <div><h1 class="page-title">Brands &amp; Prices</h1><p class="page-sub">${STATE.brands.length} brands in the catalog</p></div>
+    <button class="btn btn-primary" onclick="openBrandModal()">+ Add Brand</button>
+  </div>
+  ${STATE.brands.length===0 ? `<div class="panel"><div class="empty-state"><div class="display">No brands yet</div>Add a brand and set its price to start creating orders.</div></div>` : `
+  <div class="brand-grid">
+    ${STATE.brands.map(b=>`
+      <div class="brand-card">
+        <div class="row" style="justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="bname">${esc(b.name)}</div>
+            <span class="bsize">${esc(b.size||'—')}</span>
+          </div>
+          ${b.active ? '' : '<span class="badge">Inactive</span>'}
+        </div>
+        <div class="bprice">${money(b.price)}</div>
+        <div class="bactions">
+          <button class="btn btn-ghost btn-sm" onclick="openBrandModal(${b.id})">Edit</button>
+          <button class="btn ${b.active?'btn-danger':'btn-ghost'} btn-sm" onclick="toggleBrand(${b.id}, ${b.active?0:1})">${b.active?'Deactivate':'Activate'}</button>
+        </div>
+      </div>
+    `).join('')}
+  </div>`}
+  `;
+}
+
+/* ---------- Payments list ---------- */
+function renderPayments(){
+  return `
+  <div class="page-head">
+    <div><h1 class="page-title">Payments</h1><p class="page-sub">${STATE.payments.length} payments recorded</p></div>
+    <button class="btn btn-primary" onclick="openPaymentModal()">+ Record Payment</button>
+  </div>
+  <div class="panel">
+    ${STATE.payments.length===0 ? `<div class="empty-state">No payments recorded yet.</div>` : `
+    <table>
+      <thead><tr><th>Customer</th><th>Date</th><th>Notes</th><th style="text-align:right;">Amount</th></tr></thead>
+      <tbody>
+        ${STATE.payments.map(p=>{
+          const c = STATE.customers.find(x=>x.id===p.customer_id);
+          return `<tr onclick="openCustomerDetail(${p.customer_id})">
+            <td class="cell-name">${c?esc(c.name):'Unknown'}</td>
+            <td class="mono" style="color:var(--muted);">${fmtDate(p.payment_date)}</td>
+            <td style="color:var(--muted);">${esc(p.notes||'—')}</td>
+            <td style="text-align:right;" class="mono" style="color:var(--success);">${money(p.amount)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`}
+  </div>
+  `;
+}
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  return `
+  <div class="page-head"><div><h1 class="page-title">Settings</h1><p class="page-sub">Manage admin access</p></div></div>
+  <div class="panel">
+    <div class="panel-head"><h3>Security</h3></div>
+    <div style="padding:20px;">
+      <p style="color:var(--text-dim); font-size:14px; margin:0 0 14px 0;">Change the password used to sign in to this ledger.</p>
+      <button class="btn btn-primary" onclick="openModal('passwordModal')">Change Password</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>About</h3></div>
+    <div style="padding:20px; color:var(--text-dim); font-size:13.5px; line-height:1.7;">
+      DrinksCart Ledger — single-file admin portal backed by Turso.<br>
+      Prices are captured at the time of each order, so changing a brand's price never affects past orders.<br>
+      Balance due = opening balance + total billed − total paid, per customer.
+    </div>
+  </div>
+  `;
+}
+
+/* ==================== MODALS ==================== */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+/* ---- Customer modal ---- */
+function openCustomerModal(id){
+  document.getElementById('customerId').value = id || '';
+  if (id){
+    const c = STATE.customers.find(x=>x.id===id);
+    document.getElementById('customerModalTitle').textContent = 'Edit Customer';
+    document.getElementById('custName').value = c.name||'';
+    document.getElementById('custPhone').value = c.phone||'';
+    document.getElementById('custAddress').value = c.address||'';
+    document.getElementById('custOpeningBalance').value = c.opening_balance||0;
+  } else {
+    document.getElementById('customerModalTitle').textContent = 'Add Customer';
+    document.getElementById('custName').value = '';
+    document.getElementById('custPhone').value = '';
+    document.getElementById('custAddress').value = '';
+    document.getElementById('custOpeningBalance').value = 0;
+  }
+  openModal('customerModal');
+}
+async function saveCustomer(){
+  const id = document.getElementById('customerId').value;
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  const openingRaw = document.getElementById('custOpeningBalance').value;
+  const openingBalance = openingRaw === '' ? 0 : parseFloat(openingRaw);
+  if (!name){ showToast('Enter a customer name', 'error'); return; }
+  if (isNaN(openingBalance)){ showToast('Enter a valid opening balance', 'error'); return; }
+  try{
+    if (id){
+      await tursoRun(`UPDATE customers SET name=?, phone=?, address=?, opening_balance=? WHERE id=?`, [name, phone, address, openingBalance, parseInt(id)]);
+      showToast('Customer updated');
+    } else {
+      await tursoRun(`INSERT INTO customers (name, phone, address, opening_balance, created_at) VALUES (?,?,?,?,?)`, [name, phone, address, openingBalance, new Date().toISOString()]);
+      showToast('Customer added');
+    }
+    closeModal('customerModal');
+    await loadAll();
+    render();
+  } catch(e){ showToast('Failed to save customer', 'error'); console.error(e); }
+}
+
+/* ---- Brand modal ---- */
+function openBrandModal(id){
+  document.getElementById('brandId').value = id || '';
+  if (id){
+    const b = STATE.brands.find(x=>x.id===id);
+    document.getElementById('brandModalTitle').textContent = 'Edit Brand';
+    document.getElementById('brandName').value = b.name||'';
+    document.getElementById('brandSize').value = b.size||'750ml';
+    document.getElementById('brandPrice').value = b.price||0;
+  } else {
+    document.getElementById('brandModalTitle').textContent = 'Add Brand';
+    document.getElementById('brandName').value = '';
+    document.getElementById('brandSize').value = '750ml';
+    document.getElementById('brandPrice').value = '';
+  }
+  openModal('brandModal');
+}
+async function saveBrand(){
+  const id = document.getElementById('brandId').value;
+  const name = document.getElementById('brandName').value.trim();
+  const size = document.getElementById('brandSize').value;
+  const price = parseFloat(document.getElementById('brandPrice').value);
+  if (!name){ showToast('Enter a brand name', 'error'); return; }
+  if (isNaN(price) || price < 0){ showToast('Enter a valid price', 'error'); return; }
+  try{
+    if (id){
+      await tursoRun(`UPDATE brands SET name=?, size=?, price=? WHERE id=?`, [name, size, price, parseInt(id)]);
+      showToast('Brand updated');
+    } else {
+      await tursoRun(`INSERT INTO brands (name, size, price, active, created_at) VALUES (?,?,?,1,?)`, [name, size, price, new Date().toISOString()]);
+      showToast('Brand added');
+    }
+    closeModal('brandModal');
+    await loadAll();
+    render();
+  } catch(e){ showToast('Failed to save brand', 'error'); console.error(e); }
+}
+async function toggleBrand(id, active){
+  try{
+    await tursoRun(`UPDATE brands SET active=? WHERE id=?`, [active, id]);
+    await loadAll();
+    render();
+    showToast(active ? 'Brand activated' : 'Brand deactivated');
+  } catch(e){ showToast('Failed to update brand', 'error'); console.error(e); }
+}
+
+/* ---- Order modal ---- */
+let lineItemCounter = 0;
+function openOrderModal(customerId, orderId){
+  const sel = document.getElementById('orderCustomer');
+  document.getElementById('orderEditId').value = orderId || '';
+  document.getElementById('lineItemsContainer').innerHTML = '';
+  lineItemCounter = 0;
+
+  if (orderId){
+    const order = STATE.orders.find(o=>o.id===orderId);
+    const items = STATE.orderItems.filter(i=>i.order_id===orderId);
+    if (!order) return;
+    document.getElementById('orderModalTitle').textContent = 'Edit Order';
+    sel.innerHTML = STATE.customers.map(c=>`<option value="${c.id}" ${c.id===order.customer_id?'selected':''}>${esc(c.name)}</option>`).join('');
+    document.getElementById('orderDate').value = order.order_date || todayStr();
+    document.getElementById('orderNotes').value = order.notes || '';
+    if (items.length === 0) addLineItem();
+    else items.forEach(i => addLineItem(i.brand_id, i.quantity));
+  } else {
+    document.getElementById('orderModalTitle').textContent = 'New Order';
+    sel.innerHTML = STATE.customers.map(c=>`<option value="${c.id}" ${c.id===customerId?'selected':''}>${esc(c.name)}</option>`).join('');
+    document.getElementById('orderDate').value = todayStr();
+    document.getElementById('orderNotes').value = '';
+    if (STATE.brands.length === 0){
+      showToast('Add at least one brand before creating an order', 'error');
+    } else {
+      addLineItem();
+    }
+  }
+  updateOrderTotal();
+  openModal('orderModal');
+}
+function addLineItem(presetBrandId, presetQty){
+  lineItemCounter++;
+  const rowId = 'line_' + lineItemCounter;
+  const container = document.getElementById('lineItemsContainer');
+  const div = document.createElement('div');
+  div.className = 'line-item-row';
+  div.id = rowId;
+  div.innerHTML = `
+    <select onchange="updateOrderTotal()">
+      ${STATE.brands.map(b=>`<option value="${b.id}" data-price="${b.price}" data-name="${esc(b.name)}" data-size="${esc(b.size||'')}" ${presetBrandId && b.id===presetBrandId?'selected':''}>${esc(b.name)} (${esc(b.size||'')})${b.active?'':' — inactive'}</option>`).join('')}
+    </select>
+    <input type="number" min="1" value="${presetQty||1}" onchange="updateOrderTotal()" oninput="updateOrderTotal()">
+    <span class="mono line-item-subtotal" style="text-align:right; color:var(--amber);">₹0.00</span>
+    <button class="remove-line" onclick="document.getElementById('${rowId}').remove(); updateOrderTotal();">×</button>
+  `;
+  container.appendChild(div);
+  updateOrderTotal();
+}
+function updateOrderTotal(){
+  let total = 0;
+  document.querySelectorAll('#lineItemsContainer .line-item-row').forEach(row=>{
+    const select = row.querySelector('select');
+    const qtyInput = row.querySelector('input[type=number]');
+    const subtotalEl = row.querySelector('.line-item-subtotal');
+    if (!select || !select.options.length) return;
+    const price = parseFloat(select.options[select.selectedIndex]?.dataset.price || 0);
+    const qty = parseInt(qtyInput.value||0);
+    const subtotal = price * qty;
+    subtotalEl.textContent = money(subtotal);
+    total += subtotal;
+  });
+  document.getElementById('orderTotalFigure').textContent = money(total);
+}
+async function saveOrder(){
+  const editId = document.getElementById('orderEditId').value;
+  const customerId = parseInt(document.getElementById('orderCustomer').value);
+  const orderDate = document.getElementById('orderDate').value || todayStr();
+  const notes = document.getElementById('orderNotes').value.trim();
+  const rows = document.querySelectorAll('#lineItemsContainer .line-item-row');
+  if (!customerId){ showToast('Select a customer', 'error'); return; }
+  if (rows.length === 0){ showToast('Add at least one item', 'error'); return; }
+
+  const items = [];
+  let total = 0;
+  for (const row of rows){
+    const select = row.querySelector('select');
+    const qtyInput = row.querySelector('input[type=number]');
+    const brandId = parseInt(select.value);
+    const opt = select.options[select.selectedIndex];
+    const qty = parseInt(qtyInput.value||0);
+    if (!qty || qty <= 0) continue;
+    const unitPrice = parseFloat(opt.dataset.price||0);
+    const subtotal = unitPrice * qty;
+    total += subtotal;
+    items.push({brandId, brandName: opt.dataset.name, size: opt.dataset.size, qty, unitPrice, subtotal});
+  }
+  if (items.length === 0){ showToast('Add at least one valid item', 'error'); return; }
+
+  try{
+    let orderId;
+    if (editId){
+      orderId = parseInt(editId);
+      await tursoBatch([
+        {sql:`UPDATE orders SET customer_id=?, order_date=?, notes=?, total=? WHERE id=?`, args:[customerId, orderDate, notes, total, orderId]},
+        {sql:`DELETE FROM order_items WHERE order_id=?`, args:[orderId]}
+      ]);
+    } else {
+      const orderRes = await tursoRun(
+        `INSERT INTO orders (customer_id, order_date, notes, total, created_at) VALUES (?,?,?,?,?)`,
+        [customerId, orderDate, notes, total, new Date().toISOString()]
+      );
+      orderId = orderRes.lastInsertRowid;
+    }
+    const itemStmts = items.map(it => ({
+      sql: `INSERT INTO order_items (order_id, brand_id, brand_name, size, quantity, unit_price, total) VALUES (?,?,?,?,?,?,?)`,
+      args: [orderId, it.brandId, it.brandName, it.size, it.qty, it.unitPrice, it.subtotal]
+    }));
+    await tursoBatch(itemStmts);
+    showToast(editId ? 'Order updated' : 'Order saved');
+    closeModal('orderModal');
+    await loadAll();
+    if (STATE.currentPage === 'customerDetail'){ render(); } else { navigate('customers'); openCustomerDetail(customerId); }
+  } catch(e){ showToast('Failed to save order', 'error'); console.error(e); }
+}
+
+/* ---- Payment modal ---- */
+function openPaymentModal(customerId, paymentId){
+  const sel = document.getElementById('paymentCustomer');
+  sel.innerHTML = STATE.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('paymentEditId').value = paymentId || '';
+  if (paymentId){
+    const p = STATE.payments.find(x=>x.id===paymentId);
+    if (!p) return;
+    document.getElementById('paymentModalTitle').textContent = 'Edit Payment';
+    sel.value = p.customer_id;
+    document.getElementById('paymentAmount').value = p.amount;
+    document.getElementById('paymentDate').value = p.payment_date || todayStr();
+    document.getElementById('paymentNotes').value = p.notes || '';
+  } else {
+    document.getElementById('paymentModalTitle').textContent = 'Record Payment';
+    if (customerId) sel.value = customerId;
+    document.getElementById('paymentAmount').value = '';
+    document.getElementById('paymentDate').value = todayStr();
+    document.getElementById('paymentNotes').value = '';
+  }
+  updatePaymentDueHint();
+  openModal('paymentModal');
+}
+function updatePaymentDueHint(){
+  const id = parseInt(document.getElementById('paymentCustomer').value);
+  const bal = customerBalance(id);
+  const hint = document.getElementById('paymentDueHint');
+  if (bal > 0.004) hint.innerHTML = `Current balance due: <span class="mono" style="color:var(--danger);">${money(bal)}</span>`;
+  else if (bal < -0.004) hint.innerHTML = `Customer is in credit by <span class="mono" style="color:var(--success);">${money(-bal)}</span>`;
+  else hint.textContent = 'Customer is fully paid up.';
+}
+async function savePayment(){
+  const editId = document.getElementById('paymentEditId').value;
+  const customerId = parseInt(document.getElementById('paymentCustomer').value);
+  const amount = parseFloat(document.getElementById('paymentAmount').value);
+  const date = document.getElementById('paymentDate').value || todayStr();
+  const notes = document.getElementById('paymentNotes').value.trim();
+  if (!customerId){ showToast('Select a customer', 'error'); return; }
+  if (isNaN(amount) || amount <= 0){ showToast('Enter a valid amount', 'error'); return; }
+  try{
+    if (editId){
+      await tursoRun(`UPDATE payments SET customer_id=?, amount=?, payment_date=?, notes=? WHERE id=?`,
+        [customerId, amount, date, notes, parseInt(editId)]);
+      showToast('Payment updated');
+    } else {
+      await tursoRun(`INSERT INTO payments (customer_id, amount, payment_date, notes, created_at) VALUES (?,?,?,?,?)`,
+        [customerId, amount, date, notes, new Date().toISOString()]);
+      showToast('Payment recorded');
+    }
+    closeModal('paymentModal');
+    await loadAll();
+    render();
+  } catch(e){ showToast('Failed to save payment', 'error'); console.error(e); }
+}
+
+/* ---- Edit / delete: orders, payments, customers ---- */
+function editOrder(orderId){
+  const order = STATE.orders.find(o=>o.id===orderId);
+  if (!order) return;
+  openOrderModal(order.customer_id, orderId);
+}
+async function deleteOrder(orderId){
+  const order = STATE.orders.find(o=>o.id===orderId);
+  if (!order) return;
+  if (!confirm(`Delete this order of ${money(order.total)} dated ${fmtDate(order.order_date)}? This cannot be undone.`)) return;
+  try{
+    await tursoBatch([
+      {sql:`DELETE FROM order_items WHERE order_id=?`, args:[orderId]},
+      {sql:`DELETE FROM orders WHERE id=?`, args:[orderId]}
+    ]);
+    showToast('Order deleted');
+    await loadAll();
+    render();
+  } catch(e){ showToast('Failed to delete order', 'error'); console.error(e); }
+}
+function editPayment(paymentId){
+  const p = STATE.payments.find(x=>x.id===paymentId);
+  if (!p) return;
+  openPaymentModal(p.customer_id, paymentId);
+}
+async function deletePayment(paymentId){
+  const p = STATE.payments.find(x=>x.id===paymentId);
+  if (!p) return;
+  if (!confirm(`Delete this payment of ${money(p.amount)} dated ${fmtDate(p.payment_date)}? This cannot be undone.`)) return;
+  try{
+    await tursoRun(`DELETE FROM payments WHERE id=?`, [paymentId]);
+    showToast('Payment deleted');
+    await loadAll();
+    render();
+  } catch(e){ showToast('Failed to delete payment', 'error'); console.error(e); }
+}
+async function deleteCustomer(customerId){
+  const c = STATE.customers.find(x=>x.id===customerId);
+  if (!c) return;
+  const orderIds = STATE.orders.filter(o=>o.customer_id===customerId).map(o=>o.id);
+  const paymentCount = STATE.payments.filter(p=>p.customer_id===customerId).length;
+  const msg = `Delete ${c.name}? This will also permanently delete ${orderIds.length} order${orderIds.length===1?'':'s'} and ${paymentCount} payment${paymentCount===1?'':'s'} for this customer. This cannot be undone.`;
+  if (!confirm(msg)) return;
+  try{
+    const stmts = orderIds.map(oid => ({sql:`DELETE FROM order_items WHERE order_id=?`, args:[oid]}));
+    stmts.push({sql:`DELETE FROM orders WHERE customer_id=?`, args:[customerId]});
+    stmts.push({sql:`DELETE FROM payments WHERE customer_id=?`, args:[customerId]});
+    stmts.push({sql:`DELETE FROM customers WHERE id=?`, args:[customerId]});
+    await tursoBatch(stmts);
+    showToast('Customer deleted');
+    await loadAll();
+    navigate('customers');
+  } catch(e){ showToast('Failed to delete customer', 'error'); console.error(e); }
+}
+
+/* ---- Password modal ---- */
+async function changePassword(){
+  const current = document.getElementById('currentPassword').value;
+  const next = document.getElementById('newPassword').value;
+  if (!next || next.length < 4){ showToast('New password too short', 'error'); return; }
+  try{
+    const res = await tursoRun(`SELECT value FROM settings WHERE key='admin_password'`);
+    const stored = res.rows.length ? res.rows[0].value : 'admin123';
+    if (current !== stored){ showToast('Current password is incorrect', 'error'); return; }
+    await tursoRun(`UPDATE settings SET value=? WHERE key='admin_password'`, [next]);
+    showToast('Password updated');
+    closeModal('passwordModal');
+    document.getElementById('currentPassword').value='';
+    document.getElementById('newPassword').value='';
+  } catch(e){ showToast('Failed to update password', 'error'); console.error(e); }
+}
+
+/* ==================== BOOT ==================== */
+async function boot(){
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `<div class="loader">Loading ledger…</div>`;
+  try{
+    await ensureSchema();
+    await loadAll();
+    navigate('dashboard');
+  } catch(e){
+    main.innerHTML = `<div class="empty-state"><div class="display">Could not load data</div>${esc(e.message||'Check your Turso connection.')}</div>`;
+    console.error(e);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('dc_auth') === '1'){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    boot();
+  }
+});
+</script>
+</body>
+</html>
